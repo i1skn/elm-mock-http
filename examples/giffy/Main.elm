@@ -4,7 +4,7 @@ import Html exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as Decode
 import Result
-import MockHttp exposing (Endpoint(..))
+import Mirage exposing (Endpoint(..))
 import Http
 
 
@@ -113,17 +113,17 @@ getRandomGif topic =
         url =
             "https://api.giphy.com/v1/gifs/random?api_key=dc6zaTOxFJmzC&tag=" ++ topic
     in
-        Http.send NewGif (Http.get url decodeGifUrl)
+        Mirage.send config NewGif (Mirage.get url decodeGifUrl)
 
 
 decodeGifUrl : Decode.Decoder String
 decodeGifUrl =
-    Decode.at [ "data", "image_urll" ] Decode.string
+    Decode.at [ "data", "image_url" ] Decode.string
 
 
-config : MockHttp.Config
+config : Mirage.Config
 config =
-    MockHttp.config
+    Mirage.config
         [ Get
             { url = "https://api.giphy.com/v1/gifs/random?api_key=dc6zaTOxFJmzC&tag=cats"
             , response = "{\"data\":{ \"image_url\": \"image.png\"}}"

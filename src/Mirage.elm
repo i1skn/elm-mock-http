@@ -1,4 +1,4 @@
-module MockHttp
+module Mirage
     exposing
         ( Request(..)
         , Config
