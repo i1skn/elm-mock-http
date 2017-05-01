@@ -45,16 +45,14 @@ Imagine if you had this:
 import Http
 import Json.Decode exposing (list, string)
 
-getBooks : Http.Request (List String)
-getBooks =
-  Http.get "https://example.com/books" (list string)
-
-type Msg = GetBook
+type Msg
+    = GetBook
+    | ReceiveBooks
 
 update msg model =
   case msg of
     GetBook ->
-      Http.send getBooks
+      Http.send ReceiveBooks (Http.get "https://example.com/books" (list string))
 ```
 
 You could mock out the `https://example.com/books` api replacing
@@ -64,16 +62,14 @@ the `Http` calls with `Mirage` like below (ignore the `config` part for now):
 import Http
 import Json.Decode exposing (list, string)
 
-getBooks : Http.Request (List String)
-getBooks =
-  Mirage.get "https://example.com/books" (list string)
-
-type Msg = GetBook
+type Msg
+    = GetBook
+    | ReceiveBooks
 
 update msg model =
   case msg of
     GetBook ->
-      Mirage.send config getBooks
+      Mirage.send ReceiveBooks (Mirage.get "https://example.com/books" (list string))
 ```
 
 **note**: you must replace where you're creating the request as well as where you send the http request. For example, you couldn't just change `Http.get` to `Mirage.get` and then send that through `Http.send`.
