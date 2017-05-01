@@ -116,3 +116,13 @@ update msg model =
     ReceiveBooks books ->
       -- Do something great with those books!
 ```
+
+## Errors
+
+You can expect errors similar to running a normal `Http` request.
+
+You can only really encounter two of the `Http.Error` options:
+- `Http.BadPayload`: If something goes wrong parsing the response with your
+json decoder.
+- `Http.BadUrl`: If the url you try to get or post to does not match any of
+the configured endpoints.
