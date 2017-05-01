@@ -37,10 +37,10 @@ all =
                         getBooks =
                             Mirage.get "http://example.com/books" (list string)
 
-                        result =
-                            Mirage.getResult config getBooks
+                        response =
+                            Mirage.getResponse config getBooks
                     in
-                        case result of
+                        case response of
                             Ok books ->
                                 Expect.equal [ "The Lord of the Rings", "Harry Potter" ] books
 
@@ -75,8 +75,8 @@ all =
                         getBooks =
                             Mirage.get "http://example.com/books" (list string)
 
-                        result =
-                            Mirage.getResult config getBooks
+                        response =
+                            Mirage.getResponse config getBooks
                     in
                         case result of
                             Ok books ->
@@ -93,10 +93,10 @@ all =
                         getBooks =
                             Mirage.get "http://example.com/books" (list string)
 
-                        result =
-                            Mirage.getResult config getBooks
+                        response =
+                            Mirage.getResponse config getBooks
                     in
-                        case result of
+                        case response of
                             Err httpError ->
                                 case httpError of
                                     Http.BadUrl _ ->
