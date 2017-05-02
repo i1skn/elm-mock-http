@@ -6,6 +6,7 @@ module Mirage
         , config
         , get
         , getString
+        , post
         , send
         , getResponse
           --todo: don't expose
@@ -23,6 +24,9 @@ application.
 
 # GET
 @docs get, getString
+
+# POST
+@docs post
 -}
 
 import Task
@@ -37,6 +41,7 @@ import Process
 -}
 type Request a
     = GetJson String (Decode.Decoder a)
+    | PostJson String Http.Body (Decode.Decoder a)
 
 
 {-| configuration for endpoints.
@@ -58,13 +63,6 @@ type Endpoint
         , response : String
         , responseTime : Time
         }
-
-
-type alias EndpointFoo =
-    { url : String
-    , response : String
-    , responseTime : Time
-    }
 
 
 {-| Create a `Config` from endpoints.
@@ -90,6 +88,15 @@ Compare to `Http.getString`
 getString : String -> Request String
 getString url =
     get url string
+
+
+{-| Create a POST request and try to decode the response body from JSON to an Elm value.
+
+Compare to `Http.post`
+-}
+post : String -> Http.Body -> Decode.Decoder a -> Request a
+post url body resultDecoder =
+    PostJson url body resultDecoder
 
 
 {-| Send a `Request`. We could get the text of "War and Peace" like this:
@@ -135,8 +142,16 @@ Compare to `Http.send`.
 send : Config -> (Result Http.Error a -> msg) -> Request a -> Cmd msg
 send config resultToMessage request =
     let
+        endpointFilter =
+            case request of
+                GetJson _ _ ->
+                    filterByGet
+
+                PostJson _ _ _ ->
+                    filterByPost
+
         endpoint =
-            getEndpoint config request
+            getEndpoint config endpointFilter request
 
         response =
             getResponse config request
@@ -147,15 +162,23 @@ send config resultToMessage request =
         setTimeout responseTime (resultToMessage response)
 
 
-getEndpoint : Config -> Request a -> Maybe Endpoint
-getEndpoint config request =
+getEndpoint : Config -> (Endpoint -> Bool) -> Request a -> Maybe Endpoint
+getEndpoint config filterByEndpointType request =
     let
         url =
             case request of
                 GetJson url _ ->
                     url
+
+                PostJson url _ _ ->
+                    url
     in
-        getEndpointByUrl config url
+        case config of
+            Config endpoints ->
+                endpoints
+                    |> List.filter filterByEndpointType
+                    |> List.filter (filterEndpointsByUrl url)
+                    |> List.head
 
 
 getEndpointByUrl : Config -> String -> Maybe Endpoint
@@ -163,7 +186,7 @@ getEndpointByUrl config url =
     case config of
         Config endpoints ->
             endpoints
-                |> List.filter (endpointMatch url)
+                |> List.filter (filterEndpointsByUrl url)
                 |> List.head
 
 
@@ -190,7 +213,19 @@ getResponse config request =
         GetJson url resultDecoder ->
             let
                 endpoint =
-                    getEndpoint config request
+                    getEndpoint config filterByGet request
+            in
+                case endpoint of
+                    Just endpoint ->
+                        decodeEndpointResult resultDecoder endpoint
+
+                    Nothing ->
+                        Err (Http.BadUrl ("Could not find an mock endpoint for: " ++ url))
+
+        PostJson url _ resultDecoder ->
+            let
+                endpoint =
+                    getEndpoint config filterByPost request
             in
                 case endpoint of
                     Just endpoint ->
@@ -200,14 +235,38 @@ getResponse config request =
                         Err (Http.BadUrl ("Could not find an mock endpoint for: " ++ url))
 
 
-endpointMatch : String -> Endpoint -> Bool
-endpointMatch urlToMatch endpoint =
+filterByGet : Endpoint -> Bool
+filterByGet endpoint =
     case endpoint of
-        Get endpoint ->
-            endpoint.url == urlToMatch
+        Get _ ->
+            True
 
-        Post endpoint ->
-            endpoint.url == urlToMatch
+        Post _ ->
+            False
+
+
+filterByPost : Endpoint -> Bool
+filterByPost endpoint =
+    case endpoint of
+        Get _ ->
+            False
+
+        Post _ ->
+            True
+
+
+filterEndpointsByUrl : String -> Endpoint -> Bool
+filterEndpointsByUrl urlToMatch endpoint =
+    let
+        url =
+            case endpoint of
+                Get endpoint ->
+                    endpoint.url
+
+                Post endpoint ->
+                    endpoint.url
+    in
+        url == urlToMatch
 
 
 decodeEndpointResult : Decode.Decoder a -> Endpoint -> Result Http.Error a

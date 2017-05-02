@@ -6,7 +6,6 @@ import Expect
 
 -- import Fuzz exposing (list, int, tuple, string)
 
-import String
 import Mirage exposing (Endpoint(..))
 import Json.Decode as Decode exposing (list, string)
 import Http
@@ -31,6 +30,7 @@ all =
                                         , "Harry Potter"
                                         ]
                                       """
+                                    , responseTime = 1000
                                     }
                                 ]
 
@@ -61,6 +61,7 @@ all =
                                         , "The Great Gatsby"
                                         ]
                                       """
+                                    , responseTime = 1000
                                     }
                                 , Get
                                     { url = url
@@ -69,6 +70,7 @@ all =
                                         , "Harry Potter"
                                         ]
                                       """
+                                    , responseTime = 1000
                                     }
                                 ]
 
@@ -78,7 +80,7 @@ all =
                         response =
                             Mirage.getResponse config getBooks
                     in
-                        case result of
+                        case response of
                             Ok books ->
                                 Expect.equal [ "The Lord of the Rings", "Harry Potter" ] books
 
