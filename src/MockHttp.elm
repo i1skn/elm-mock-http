@@ -14,7 +14,7 @@ module MockHttp
 
 {-|
 A client-side server to simulate server-side communications that are made
-through `elm-lang/Http`
+through `elm-lang/Http`.
 
 # Configure Endpoints
 @docs Config, Endpoint, config
@@ -50,7 +50,7 @@ type Config
     = Config (List Endpoint)
 
 
-{-| Represents an endpoint with it's action, url, and response.
+{-| Represents an endpoint.
 -}
 type Endpoint
     = Get
@@ -74,6 +74,15 @@ config endpoints =
 
 {-| Create a `GET` request and try to decode the response body from JSON to some Elm value.
 
+```elm
+    import MockHttp
+    import Json.Decode exposing (list, string)
+
+    getSpells: MockHttp.Request (List String)
+    getSpells =
+        MockHttp.get "http://example.com/harrypotter/spells" (list string)
+```
+
 Compare to `Http.get`
 -}
 get : String -> Decode.Decoder a -> Request a
@@ -82,6 +91,14 @@ get url resultDecoder =
 
 
 {-| Create a `GET` request and interpret the response as a string.
+
+```elm
+    import MockHttp
+
+    getBestHarryPotterCharactersName: MockHttp.Request (String)
+    getBestHarryPotterCharactersName =
+        MockHttp.getString "http://example.com/harrypotter/bestCharacter"
+```
 
 Compare to `Http.getString`
 -}
@@ -92,6 +109,20 @@ getString url =
 
 {-| Create a POST request and try to decode the response body from JSON to an Elm value.
 
+```elm
+    import MockHttp
+
+    disarmOtherWizard: MockHttp.Request (String)
+    disarmOtherWizard =
+        let
+            body =
+                Http.multipartBody
+                    [ stringPart "spell" "expelliarmus"
+                    ]
+        in
+            MockHttp.post "http://example.com/harrypotter/castSpell" body string
+```
+
 Compare to `Http.post`
 -}
 post : String -> Http.Body -> Decode.Decoder a -> Request a
@@ -99,38 +130,43 @@ post url body resultDecoder =
     PostJson url body resultDecoder
 
 
-{-| Send a `Request`. We could get the text of "War and Peace" like this:
+{-| Send a `Request`. We could get the main characters of "Harry Potter" like this:
 ```elm
-import MockHttp exposing (Endpoint(..))
-import Json.Decode exposing (string)
 import Http
+import Json.Decode exposing (list, string)
+import MockHttp exposing (Endpoint(..))
 
-type Msg = Click | NewBook (Result Http.Error String)
+type Msg = Click | ReceiveCharacters (Result Http.Error (List String))
 
 update : Msg -> Model -> Model
 update msg model =
     case msg of
         Click ->
-            ( model, getWarAndPeace )
+            ( model, getHarryPotterCharacters )
 
-        NewBook (Ok book) ->
+        ReceiveCharacters (Ok characters) ->
             ...
 
-        NewBook (Err _) ->
+        ReceiveCharacters (Err _) ->
             ...
 
-getWarAndPeace : Cmd Msg
-getWarAndPeace =
-    MockHttp.send config NewBook <|
-        MockHttp.getString "https://example.com/books/war-and-peace"
+getHarryPotterCharacters : Cmd Msg
+getHarryPotterCharacters =
+    MockHttp.send config ReceiveCharacters <|
+        MockHttp.get "https://example.com/harrypotter/characters" (list string)
 
 config : MockHttp.Config
 config =
     let
         endpoints =
             [ Get
-                { url = "https://example.com/books/war-and-peace"
-                , response = "War and Peace Text Contents"
+                { url = "https://example.com/harrypotter/characters"
+                , response = """
+                    [ "Harry James Potter"
+                    , "Ronald Bilius Weasley",
+                    , "Hermione Jean Granger"
+                    ]
+                """
                 }
             ]
     in

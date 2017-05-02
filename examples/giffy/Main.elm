@@ -59,7 +59,7 @@ update msg model =
                 errorMessage =
                     case error of
                         Http.NetworkError ->
-                            "We were unable to parse the json"
+                            "Sorry, we were unable to decode the json response."
 
                         Http.BadUrl badUrlMessage ->
                             badUrlMessage
@@ -77,15 +77,24 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div []
-        [ div []
-            [ strong [] [ text "error: " ]
-            , span [] [ text <| Maybe.withDefault "" model.errorMessage ]
-            ]
+        [ errorMessage model
         , h2 [] [ text model.topic ]
         , button [ onClick MorePlease ] [ text "More Please!" ]
         , br [] []
         , div [] [ text model.gifUrl ]
         ]
+
+
+errorMessage model =
+    case model.errorMessage of
+        Just errorMessage ->
+            div []
+                [ strong [] [ text "Error message: " ]
+                , span [] [ text errorMessage ]
+                ]
+
+        Nothing ->
+            div [] []
 
 
 
