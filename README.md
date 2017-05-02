@@ -124,3 +124,10 @@ You can only encounter two of the `Http.Error` options:
 in your endpoint.
 - `Http.BadUrl`: If the url you try to get or post to does not match any of
 the configured endpoints.
+
+## Contributing
+I'm happy to recieve any feedback and ideas for additional features. Any input
+and pull requests are welcome and encouraged! I really want to make this a useful
+tool during development that will make our lives easier. If you'd like to help or
+have any ideas, get in touch with me at @ryanolsonx on Twitter or @ryanolsonx on
+the Elm Slack.
