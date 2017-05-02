@@ -9,7 +9,7 @@ Have you ever been in one of these situations?
 - You're in charge of the front-end and someone else is in charge of the back-end
 but you want to test out your Elm application, even while the back-end is still
 in flux?
-- You want to test out different responses for how you can shape your back-end,
+- You want to test out different responses to guide how you can shape your back-end,
 without all of the back-end work?
 
 If so, then this project is for you.
@@ -28,7 +28,7 @@ There are only a few things you'll need to do in order to get started:
 
 ### Step 1: Install Package
 
-Install this package using `elm package install ryanolsonx/elm-MockHttp`
+Install this package using `elm package install ryanolsonx/elm-mock-http`
 
 ### Step 2: Add Import
 Add `MockHttp` to your imports
@@ -106,7 +106,7 @@ type Msg = GetBook | ReceiveBooks (List String)
 update msg model =
   case msg of
     GetBook ->
-      MockHttp.send config ReceiveBooks getBooks
+      (model, MockHttp.send config ReceiveBooks getBooks)
     ReceiveBooks books ->
       -- Do something great with those books!
 ```
@@ -115,8 +115,8 @@ update msg model =
 
 You can expect errors similar to running a normal `Http` request.
 
-You can only really encounter two of the `Http.Error` options:
-- `Http.BadPayload`: If something goes wrong parsing the response with your
-json decoder.
+You can only encounter two of the `Http.Error` options:
+- `Http.BadPayload`: If something goes wrong decoding the response configured
+in your endpoint.
 - `Http.BadUrl`: If the url you try to get or post to does not match any of
 the configured endpoints.
