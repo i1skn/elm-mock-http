@@ -59,6 +59,7 @@ the `Http` calls with `MockHttp` like below (ignore the `config` part for now):
 ```elm
 import Http
 import Json.Decode exposing (list, string)
+import MockHttp
 
 type Msg
     = GetBook
@@ -67,7 +68,10 @@ type Msg
 update msg model =
   case msg of
     GetBook ->
-      MockHttp.send ReceiveBooks (MockHttp.get "https://example.com/books" (list string))
+      MockHttp.send config ReceiveBooks (MockHttp.get "https://example.com/books" (list string))
+
+config : MockHttp.Config
+...
 ```
 
 **note**: you must replace where you're creating the request as well as where you send the http request. For example, you couldn't just change `Http.get` to `MockHttp.get` and then send that through `Http.send`.
