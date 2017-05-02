@@ -25,10 +25,10 @@ all =
                             MockHttp.config
                                 [ Get
                                     { url = url
-                                    , response = """\x0D
-                                        [ "The Lord of the Rings"\x0D
-                                        , "Harry Potter"\x0D
-                                        ]\x0D
+                                    , response = """
+                                        [ "The Lord of the Rings"
+                                        , "Harry Potter"
+                                        ]
                                       """
                                     , responseTime = 1000
                                     }
@@ -56,19 +56,19 @@ all =
                             MockHttp.config
                                 [ Get
                                     { url = url ++ "/classics"
-                                    , response = """\x0D
-                                        [ "Pride and Prejudice"\x0D
-                                        , "The Great Gatsby"\x0D
-                                        ]\x0D
+                                    , response = """
+                                        [ "Pride and Prejudice"
+                                        , "The Great Gatsby"
+                                        ]
                                       """
                                     , responseTime = 1000
                                     }
                                 , Get
                                     { url = url
-                                    , response = """\x0D
-                                        [ "The Lord of the Rings"\x0D
-                                        , "Harry Potter"\x0D
-                                        ]\x0D
+                                    , response = """
+                                        [ "The Lord of the Rings"
+                                        , "Harry Potter"
+                                        ]
                                       """
                                     , responseTime = 1000
                                     }
@@ -124,4 +124,43 @@ all =
           --         \s1 s2 ->
           --             s1 ++ s2 |> String.length |> Expect.equal (String.length s1 + String.length s2)
           --     ]
+        , describe "post"
+            [ test "typical successful case" <|
+                \() ->
+                    let
+                        url =
+                            "http://example.com/books"
+
+                        config =
+                            MockHttp.config
+                                [ Post
+                                    { url = url
+                                    , response = """
+                                        "Saved!"
+                                    """
+                                    , responseTime = 500
+                                    }
+                                ]
+
+                        saveBooks =
+                            MockHttp.post "http://example.com/books" Http.emptyBody string
+
+                        response =
+                            MockHttp.getResponse config saveBooks
+                    in
+                        case response of
+                            Ok message ->
+                                Expect.equal "Saved!" message
+
+                            Err err ->
+                                case err of
+                                    Http.BadUrl badUrlMessage ->
+                                        Expect.fail badUrlMessage
+
+                                    Http.BadPayload decodeErrorMessage _ ->
+                                        Expect.fail decodeErrorMessage
+
+                                    _ ->
+                                        Expect.fail "It should have successfully saved."
+            ]
         ]

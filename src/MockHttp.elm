@@ -215,24 +215,14 @@ getResponse config request =
                 endpoint =
                     getEndpoint config filterByGet request
             in
-                case endpoint of
-                    Just endpoint ->
-                        decodeEndpointResult resultDecoder endpoint
-
-                    Nothing ->
-                        Err (Http.BadUrl ("Could not find an mock endpoint for: " ++ url))
+                getResponseFromEndpointUrlAndDecoder endpoint url resultDecoder
 
         PostJson url _ resultDecoder ->
             let
                 endpoint =
                     getEndpoint config filterByPost request
             in
-                case endpoint of
-                    Just endpoint ->
-                        decodeEndpointResult resultDecoder endpoint
-
-                    Nothing ->
-                        Err (Http.BadUrl ("Could not find an mock endpoint for: " ++ url))
+                getResponseFromEndpointUrlAndDecoder endpoint url resultDecoder
 
 
 filterByGet : Endpoint -> Bool
@@ -267,6 +257,16 @@ filterEndpointsByUrl urlToMatch endpoint =
                     endpoint.url
     in
         url == urlToMatch
+
+
+getResponseFromEndpointUrlAndDecoder : Maybe Endpoint -> String -> Decode.Decoder a -> Result Http.Error a
+getResponseFromEndpointUrlAndDecoder endpoint url resultDecoder =
+    case endpoint of
+        Just endpoint ->
+            decodeEndpointResult resultDecoder endpoint
+
+        Nothing ->
+            Err (Http.BadUrl ("Could not find an mock endpoint for: " ++ url))
 
 
 decodeEndpointResult : Decode.Decoder a -> Endpoint -> Result Http.Error a
