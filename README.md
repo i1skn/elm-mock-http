@@ -87,8 +87,8 @@ config =
         [ Get
             { url = "https://example.com/books"
             , response = """
-                [ \"The Lord of the Rings\"
-                , \"Harry Potter\"
+                [ "The Lord of the Rings"
+                , "Harry Potter"
                 ]
               """
             }

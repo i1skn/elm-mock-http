@@ -2,6 +2,7 @@ module Main exposing (..)
 
 import Html exposing (..)
 import Html.Events exposing (..)
+import Html.Attributes exposing (src)
 import Json.Decode as Decode
 import Result
 import MockHttp exposing (Endpoint(..))
@@ -81,7 +82,7 @@ view model =
         , h2 [] [ text model.topic ]
         , button [ onClick MorePlease ] [ text "More Please!" ]
         , br [] []
-        , div [] [ text model.gifUrl ]
+        , img [ src model.gifUrl ] []
         ]
 
 
@@ -129,6 +130,12 @@ config =
     MockHttp.config
         [ Get
             { url = "https://api.giphy.com/v1/gifs/random?api_key=dc6zaTOxFJmzC&tag=cats"
-            , response = "{\"data\":{ \"image_url\": \"image.png\"}}"
+            , response = """
+                {"data":
+                    { "image_url": "http://media0.giphy.com/media/9JLQKmspQAMWQ/giphy.gif"
+                    }
+                }
+            """
+            , responseTime = 5000
             }
         ]
