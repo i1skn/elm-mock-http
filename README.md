@@ -1,9 +1,7 @@
-# Elm Mirage
+# Elm Mock Http
 
-Inspired by ember-cli-mirage.
-
-A client-side server to simulate server-side communications for your Elm
-application.
+A client-side server to simulate server-side communications that are made
+through `elm-lang/Http`
 
 Have you ever been in one of these situations?
 
@@ -23,22 +21,22 @@ calls.
 
 There are only a few things you'll need to do in order to get started:
 1. Install this package.
-2. Import `Mirage` in your Elm file.
-3. Change your `Http` calls to `Mirage`
+2. Import `MockHttp` in your Elm file.
+3. Change your `Http` calls to `MockHttp`
 4. Configure your mock endpoints and their responses.
 5. You're good to go!
 
 ### Step 1: Install Package
 
-Install this package using `elm package install ryanolsonx/elm-mirage`
+Install this package using `elm package install ryanolsonx/elm-MockHttp`
 
 ### Step 2: Add Import
-Add `Mirage` to your imports
+Add `MockHttp` to your imports
 ```elm
-import Mirage exposing (Endpoint(..))
+import MockHttp exposing (Endpoint(..))
 ```
 
-### Step 3: Change your `Http` calls to `Mirage`
+### Step 3: Change your `Http` calls to `MockHttp`
 
 Imagine if you had this:
 ```elm
@@ -56,7 +54,7 @@ update msg model =
 ```
 
 You could mock out the `https://example.com/books` api replacing
-the `Http` calls with `Mirage` like below (ignore the `config` part for now):
+the `Http` calls with `MockHttp` like below (ignore the `config` part for now):
 
 ```elm
 import Http
@@ -69,19 +67,19 @@ type Msg
 update msg model =
   case msg of
     GetBook ->
-      Mirage.send ReceiveBooks (Mirage.get "https://example.com/books" (list string))
+      MockHttp.send ReceiveBooks (MockHttp.get "https://example.com/books" (list string))
 ```
 
-**note**: you must replace where you're creating the request as well as where you send the http request. For example, you couldn't just change `Http.get` to `Mirage.get` and then send that through `Http.send`.
+**note**: you must replace where you're creating the request as well as where you send the http request. For example, you couldn't just change `Http.get` to `MockHttp.get` and then send that through `Http.send`.
 
 ### Step 4: Configure Endpoints
 
-In order for `Mirage` to know what mock data to return for different calls, you need to create a `Config` and then pass it in with everything `Mirage.send`. You can create one as seen below:
+In order for `MockHttp` to know what mock data to return for different calls, you need to create a `Config` and then pass it in with everything `MockHttp.send`. You can create one as seen below:
 
 ```elm
-config : Mirage.Config
+config : MockHttp.Config
 config =
-    Mirage.config
+    MockHttp.config
         [ Get
             { url = "https://example.com/books"
             , response = """
@@ -101,14 +99,14 @@ import Json.Decode exposing (list, string)
 
 getBooks : Http.Request (List String)
 getBooks =
-  Mirage.get "https://example.com/books" (list string)
+  MockHttp.get "https://example.com/books" (list string)
 
 type Msg = GetBook | ReceiveBooks (List String)
 
 update msg model =
   case msg of
     GetBook ->
-      Mirage.send config ReceiveBooks getBooks
+      MockHttp.send config ReceiveBooks getBooks
     ReceiveBooks books ->
       -- Do something great with those books!
 ```

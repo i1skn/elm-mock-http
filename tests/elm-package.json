@@ -1,7 +1,7 @@
 {
     "version": "1.0.0",
-    "summary": "Sample Elm Test",
-    "repository": "https://github.com/user/project.git",
+    "summary": "Tests for elm-mock-http",
+    "repository": "https://github.com/ryanolsonx/elm-mock-http.git",
     "license": "BSD-3-Clause",
     "source-directories": [
         ".",

@@ -4,7 +4,7 @@ import Html exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as Decode
 import Result
-import Mirage exposing (Endpoint(..))
+import MockHttp exposing (Endpoint(..))
 import Http
 
 
@@ -64,14 +64,8 @@ update msg model =
                         Http.BadUrl badUrlMessage ->
                             badUrlMessage
 
-                        Http.BadStatus response ->
-                            "Bad status"
-
-                        Http.BadPayload decoderError response ->
-                            "Bad payload" ++ decoderError
-
-                        Http.Timeout ->
-                            "Timeout"
+                        _ ->
+                            "Unknown error occurred"
             in
                 ( { model | errorMessage = Just errorMessage }, Cmd.none )
 
@@ -113,7 +107,7 @@ getRandomGif topic =
         url =
             "https://api.giphy.com/v1/gifs/random?api_key=dc6zaTOxFJmzC&tag=" ++ topic
     in
-        Mirage.send config NewGif (Mirage.get url decodeGifUrl)
+        MockHttp.send config NewGif (MockHttp.get url decodeGifUrl)
 
 
 decodeGifUrl : Decode.Decoder String
@@ -121,9 +115,9 @@ decodeGifUrl =
     Decode.at [ "data", "image_url" ] Decode.string
 
 
-config : Mirage.Config
+config : MockHttp.Config
 config =
-    Mirage.config
+    MockHttp.config
         [ Get
             { url = "https://api.giphy.com/v1/gifs/random?api_key=dc6zaTOxFJmzC&tag=cats"
             , response = "{\"data\":{ \"image_url\": \"image.png\"}}"

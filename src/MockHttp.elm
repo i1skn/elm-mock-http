@@ -1,4 +1,4 @@
-module Mirage
+module MockHttp
     exposing
         ( Request
         , Config
@@ -13,8 +13,8 @@ module Mirage
         )
 
 {-|
-A client-side server to simulate server-side communications for your Elm
-application.
+A client-side server to simulate server-side communications that are made
+through `elm-lang/Http`
 
 # Configure Endpoints
 @docs Config, Endpoint, config
@@ -101,7 +101,7 @@ post url body resultDecoder =
 
 {-| Send a `Request`. We could get the text of "War and Peace" like this:
 ```elm
-import Mirage exposing (Endpoint(..))
+import MockHttp exposing (Endpoint(..))
 import Json.Decode exposing (string)
 import Http
 
@@ -121,10 +121,10 @@ update msg model =
 
 getWarAndPeace : Cmd Msg
 getWarAndPeace =
-    Mirage.send config NewBook <|
-        Mirage.getString "https://example.com/books/war-and-peace"
+    MockHttp.send config NewBook <|
+        MockHttp.getString "https://example.com/books/war-and-peace"
 
-config : Mirage.Config
+config : MockHttp.Config
 config =
     let
         endpoints =
@@ -134,7 +134,7 @@ config =
                 }
             ]
     in
-        Mirage.config endpoints
+        MockHttp.config endpoints
 ```
 
 Compare to `Http.send`.

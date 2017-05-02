@@ -6,14 +6,14 @@ import Expect
 
 -- import Fuzz exposing (list, int, tuple, string)
 
-import Mirage exposing (Endpoint(..))
+import MockHttp exposing (Endpoint(..))
 import Json.Decode as Decode exposing (list, string)
 import Http
 
 
 all : Test
 all =
-    describe "Mirage"
+    describe "MockHttp"
         [ describe "get"
             [ test "typical successful case" <|
                 \() ->
@@ -22,23 +22,23 @@ all =
                             "http://example.com/books"
 
                         config =
-                            Mirage.config
+                            MockHttp.config
                                 [ Get
                                     { url = url
-                                    , response = """
-                                        [ "The Lord of the Rings"
-                                        , "Harry Potter"
-                                        ]
+                                    , response = """\x0D
+                                        [ "The Lord of the Rings"\x0D
+                                        , "Harry Potter"\x0D
+                                        ]\x0D
                                       """
                                     , responseTime = 1000
                                     }
                                 ]
 
                         getBooks =
-                            Mirage.get "http://example.com/books" (list string)
+                            MockHttp.get "http://example.com/books" (list string)
 
                         response =
-                            Mirage.getResponse config getBooks
+                            MockHttp.getResponse config getBooks
                     in
                         case response of
                             Ok books ->
@@ -53,32 +53,32 @@ all =
                             "http://example.com/books"
 
                         config =
-                            Mirage.config
+                            MockHttp.config
                                 [ Get
                                     { url = url ++ "/classics"
-                                    , response = """
-                                        [ "Pride and Prejudice"
-                                        , "The Great Gatsby"
-                                        ]
+                                    , response = """\x0D
+                                        [ "Pride and Prejudice"\x0D
+                                        , "The Great Gatsby"\x0D
+                                        ]\x0D
                                       """
                                     , responseTime = 1000
                                     }
                                 , Get
                                     { url = url
-                                    , response = """
-                                        [ "The Lord of the Rings"
-                                        , "Harry Potter"
-                                        ]
+                                    , response = """\x0D
+                                        [ "The Lord of the Rings"\x0D
+                                        , "Harry Potter"\x0D
+                                        ]\x0D
                                       """
                                     , responseTime = 1000
                                     }
                                 ]
 
                         getBooks =
-                            Mirage.get "http://example.com/books" (list string)
+                            MockHttp.get "http://example.com/books" (list string)
 
                         response =
-                            Mirage.getResponse config getBooks
+                            MockHttp.getResponse config getBooks
                     in
                         case response of
                             Ok books ->
@@ -90,13 +90,13 @@ all =
                 \() ->
                     let
                         config =
-                            Mirage.config []
+                            MockHttp.config []
 
                         getBooks =
-                            Mirage.get "http://example.com/books" (list string)
+                            MockHttp.get "http://example.com/books" (list string)
 
                         response =
-                            Mirage.getResponse config getBooks
+                            MockHttp.getResponse config getBooks
                     in
                         case response of
                             Err httpError ->

@@ -1,13 +1,13 @@
 {
     "version": "1.0.0",
     "summary": "A client-side server to simulate server-side communications",
-    "repository": "https://github.com/ryanolsonx/elm-mirage.git",
+    "repository": "https://github.com/ryanolsonx/elm-mock-http.git",
     "license": "BSD3",
     "source-directories": [
         "src"
     ],
     "exposed-modules": [
-      "Mirage"
+      "MockHttp"
     ],
     "dependencies": {
         "elm-lang/core": "5.1.1 <= v < 6.0.0",
