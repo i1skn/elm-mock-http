@@ -44,6 +44,26 @@ type Request a
     | PostJson String Http.Body (Decode.Decoder a)
 
 
+requestUrl : Request a -> String
+requestUrl request =
+    case request of
+        GetJson url _ ->
+            url
+
+        PostJson url _ _ ->
+            url
+
+
+requestUrlAndDecoder : Request a -> ( String, Decode.Decoder a )
+requestUrlAndDecoder request =
+    case request of
+        GetJson url decoder ->
+            ( url, decoder )
+
+        PostJson url _ decoder ->
+            ( url, decoder )
+
+
 {-| configuration for endpoints.
 -}
 type Config
@@ -53,16 +73,25 @@ type Config
 {-| Represents an endpoint.
 -}
 type Endpoint
-    = Get
-        { url : String
-        , response : String
-        , responseTime : Time
-        }
-    | Post
-        { url : String
-        , response : String
-        , responseTime : Time
-        }
+    = Get EndpointData
+    | Post EndpointData
+
+
+type alias EndpointData =
+    { url : String
+    , response : String
+    , responseTime : Time
+    }
+
+
+unwrapEndpoint : Endpoint -> EndpointData
+unwrapEndpoint endpoint =
+    case endpoint of
+        Get endpointData ->
+            endpointData
+
+        Post endpointData ->
+            endpointData
 
 
 {-| Create a `Config` from endpoints.
@@ -178,36 +207,20 @@ Compare to `Http.send`.
 send : Config -> (Result Http.Error a -> msg) -> Request a -> Cmd msg
 send config resultToMessage request =
     let
-        endpointFilter =
-            case request of
-                GetJson _ _ ->
-                    filterByGet
-
-                PostJson _ _ _ ->
-                    filterByPost
-
-        endpoint =
-            getEndpoint config endpointFilter request
-
-        response =
+        ( response, responseTime ) =
             getResponse config request
-
-        responseTime =
-            getResponseTime endpoint
     in
         setTimeout responseTime (resultToMessage response)
 
 
-getEndpoint : Config -> (Endpoint -> Bool) -> Request a -> Maybe Endpoint
-getEndpoint config filterByEndpointType request =
+getEndpoint : Config -> Request a -> Maybe Endpoint
+getEndpoint config request =
     let
         url =
-            case request of
-                GetJson url _ ->
-                    url
+            requestUrl request
 
-                PostJson url _ _ ->
-                    url
+        filterByEndpointType =
+            getEndpointFilter request
     in
         case config of
             Config endpoints ->
@@ -215,6 +228,16 @@ getEndpoint config filterByEndpointType request =
                     |> List.filter filterByEndpointType
                     |> List.filter (filterEndpointsByUrl url)
                     |> List.head
+
+
+getEndpointFilter : Request a -> (Endpoint -> Bool)
+getEndpointFilter request =
+    case request of
+        GetJson _ _ ->
+            filterByGet
+
+        PostJson _ _ _ ->
+            filterByPost
 
 
 getEndpointByUrl : Config -> String -> Maybe Endpoint
@@ -227,8 +250,8 @@ getEndpointByUrl config url =
 
 
 getResponseTime : Maybe Endpoint -> Time
-getResponseTime endpoint =
-    case endpoint of
+getResponseTime maybeEndpoint =
+    case maybeEndpoint of
         Just endpoint ->
             case endpoint of
                 Get endpoint ->
@@ -241,24 +264,34 @@ getResponseTime endpoint =
             0
 
 
-{-| Get response from a `Request` using configured endpoints.
+{-| Get response and response time from a `Request` using configured endpoints.
 -}
-getResponse : Config -> Request a -> Result Http.Error a
+getResponse : Config -> Request a -> ( Result Http.Error a, Time )
 getResponse config request =
-    case request of
-        GetJson url resultDecoder ->
-            let
-                endpoint =
-                    getEndpoint config filterByGet request
-            in
-                getResponseFromEndpointUrlAndDecoder endpoint url resultDecoder
+    let
+        ( url, resultDecoder ) =
+            getUrlAndDecoderFromRequest request
 
-        PostJson url _ resultDecoder ->
-            let
-                endpoint =
-                    getEndpoint config filterByPost request
-            in
-                getResponseFromEndpointUrlAndDecoder endpoint url resultDecoder
+        endpoint =
+            getEndpoint config request
+
+        responseTime =
+            getResponseTime endpoint
+
+        response =
+            getResponseFromEndpointUrlAndDecoder endpoint url resultDecoder
+    in
+        ( response, responseTime )
+
+
+getUrlAndDecoderFromRequest : Request a -> ( String, Decode.Decoder a )
+getUrlAndDecoderFromRequest request =
+    case request of
+        GetJson url decoder ->
+            ( url, decoder )
+
+        PostJson url _ decoder ->
+            ( url, decoder )
 
 
 filterByGet : Endpoint -> Bool
@@ -308,26 +341,28 @@ getResponseFromEndpointUrlAndDecoder endpoint url resultDecoder =
 decodeEndpointResult : Decode.Decoder a -> Endpoint -> Result Http.Error a
 decodeEndpointResult resultDecoder endpoint =
     let
-        endpointValue =
-            case endpoint of
-                Get endpoint ->
-                    endpoint
+        endpointData =
+            unwrapEndpoint endpoint
 
-                Post endpoint ->
-                    endpoint
+        decodeResult =
+            Decode.decodeString resultDecoder endpointData.response
     in
-        case Decode.decodeString resultDecoder endpointValue.response of
+        case decodeResult of
             Ok value ->
                 Ok value
 
             Err decodeErr ->
-                Err (badPayload decodeErr endpointValue.url endpointValue.response)
+                Err (badPayload decodeErr endpointData.url endpointData.response)
 
 
 badPayload : String -> String -> String -> Http.Error
 badPayload decoderError url response =
-    Http.BadPayload decoderError
-        (Http.Response url { code = 200, message = "Ok" } Dict.empty response)
+    Http.BadPayload decoderError (getHttpResponse url response)
+
+
+getHttpResponse : String -> String -> Http.Response String
+getHttpResponse url response =
+    (Http.Response url { code = 200, message = "Ok" } Dict.empty response)
 
 
 setTimeout : Time -> msg -> Cmd msg
