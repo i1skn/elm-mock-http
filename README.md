@@ -17,6 +17,26 @@ If so, then this project is for you.
 It allows you to use an api that just about mirrors the `elm-lang/http` server-side
 calls.
 
+## What Does This Do?
+
+`elm-mock-http` allows you to configure endpoints which will define what data
+should return when you make certain calls with a url and HTTP verb.
+
+For example, you could set up an endpoint that says 'when I receive a GET request
+for url http://example.com/getBooks' it should return '["Book 1", "Book 2"]'. When
+you use `MockHttp` while developing, you could then make a `MockHttp.get` request and
+then send it using `MockHttp.send`. You will receive your response back decoded into
+whatever type you defined.
+
+The key point is that `MockHttp` is a temporary measure that allows you to:
+1. Get your json decoder fully functional
+2. Flesh out your views
+3. Test out what things would look like with different response times
+4. Use a temporary endpoint until a server-side endpoint is available
+
+Ultimately, at some point, you'll want to change your `MockHttp` mentions to `Http`
+and receive your responses from a server.
+
 ## Getting Started
 
 There are only a few things you'll need to do in order to get started:
@@ -45,7 +65,7 @@ import Json.Decode exposing (list, string)
 
 type Msg
     = GetBook
-    | ReceiveBooks
+    | ReceiveBooks (List String)
 
 update msg model =
   case msg of
@@ -63,7 +83,7 @@ import MockHttp
 
 type Msg
     = GetBook
-    | ReceiveBooks
+    | ReceiveBooks (List String)
 
 update msg model =
   case msg of
