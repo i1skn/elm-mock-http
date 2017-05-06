@@ -8,7 +8,7 @@ module MockHttp
         , getString
         , post
         , send
-        , getResponse
+        , getResult
           --todo: don't expose
         )
 
@@ -20,7 +20,7 @@ through `elm-lang/Http`.
 @docs Config, Endpoint, config
 
 # Send Requests
-@docs Request, send, getResponse
+@docs Request, send, getResult
 
 # GET
 @docs get, getString
@@ -84,14 +84,98 @@ type alias EndpointData =
     }
 
 
-unwrapEndpoint : Endpoint -> EndpointData
-unwrapEndpoint endpoint =
+getEndpointData : Endpoint -> EndpointData
+getEndpointData endpoint =
     case endpoint of
         Get endpointData ->
             endpointData
 
         Post endpointData ->
             endpointData
+
+
+getResponseTime : Maybe Endpoint -> Time
+getResponseTime maybeEndpoint =
+    case maybeEndpoint of
+        Just endpoint ->
+            let
+                endpointData =
+                    getEndpointData endpoint
+            in
+                endpointData.responseTime
+
+        Nothing ->
+            0
+
+
+getEndpoint : Config -> Request a -> Maybe Endpoint
+getEndpoint config request =
+    let
+        url =
+            requestUrl request
+
+        filterByEndpointType =
+            getEndpointFilter request
+    in
+        case config of
+            Config endpoints ->
+                endpoints
+                    |> List.filter filterByEndpointType
+                    |> List.filter (filterEndpointsByUrl url)
+                    |> List.head
+
+
+getEndpointFilter : Request a -> (Endpoint -> Bool)
+getEndpointFilter request =
+    case request of
+        GetJson _ _ ->
+            filterByGet
+
+        PostJson _ _ _ ->
+            filterByPost
+
+
+getEndpointByUrl : Config -> String -> Maybe Endpoint
+getEndpointByUrl config url =
+    case config of
+        Config endpoints ->
+            endpoints
+                |> List.filter (filterEndpointsByUrl url)
+                |> List.head
+
+
+filterByGet : Endpoint -> Bool
+filterByGet endpoint =
+    case endpoint of
+        Get _ ->
+            True
+
+        Post _ ->
+            False
+
+
+filterByPost : Endpoint -> Bool
+filterByPost endpoint =
+    case endpoint of
+        Get _ ->
+            False
+
+        Post _ ->
+            True
+
+
+filterEndpointsByUrl : String -> Endpoint -> Bool
+filterEndpointsByUrl urlToMatch endpoint =
+    let
+        url =
+            case endpoint of
+                Get endpoint ->
+                    endpoint.url
+
+                Post endpoint ->
+                    endpoint.url
+    in
+        url == urlToMatch
 
 
 {-| Create a `Config` from endpoints.
@@ -207,70 +291,19 @@ Compare to `Http.send`.
 send : Config -> (Result Http.Error a -> msg) -> Request a -> Cmd msg
 send config resultToMessage request =
     let
-        ( response, responseTime ) =
-            getResponse config request
+        ( result, responseTime ) =
+            getResult config request
     in
-        setTimeout responseTime (resultToMessage response)
-
-
-getEndpoint : Config -> Request a -> Maybe Endpoint
-getEndpoint config request =
-    let
-        url =
-            requestUrl request
-
-        filterByEndpointType =
-            getEndpointFilter request
-    in
-        case config of
-            Config endpoints ->
-                endpoints
-                    |> List.filter filterByEndpointType
-                    |> List.filter (filterEndpointsByUrl url)
-                    |> List.head
-
-
-getEndpointFilter : Request a -> (Endpoint -> Bool)
-getEndpointFilter request =
-    case request of
-        GetJson _ _ ->
-            filterByGet
-
-        PostJson _ _ _ ->
-            filterByPost
-
-
-getEndpointByUrl : Config -> String -> Maybe Endpoint
-getEndpointByUrl config url =
-    case config of
-        Config endpoints ->
-            endpoints
-                |> List.filter (filterEndpointsByUrl url)
-                |> List.head
-
-
-getResponseTime : Maybe Endpoint -> Time
-getResponseTime maybeEndpoint =
-    case maybeEndpoint of
-        Just endpoint ->
-            case endpoint of
-                Get endpoint ->
-                    endpoint.responseTime
-
-                Post endpoint ->
-                    endpoint.responseTime
-
-        Nothing ->
-            0
+        setTimeout responseTime (resultToMessage result)
 
 
 {-| Get response and response time from a `Request` using configured endpoints.
 -}
-getResponse : Config -> Request a -> ( Result Http.Error a, Time )
-getResponse config request =
+getResult : Config -> Request a -> ( Result Http.Error a, Time )
+getResult config request =
     let
         ( url, resultDecoder ) =
-            getUrlAndDecoderFromRequest request
+            requestUrlAndDecoder request
 
         endpoint =
             getEndpoint config request
@@ -282,50 +315,6 @@ getResponse config request =
             getResponseFromEndpointUrlAndDecoder endpoint url resultDecoder
     in
         ( response, responseTime )
-
-
-getUrlAndDecoderFromRequest : Request a -> ( String, Decode.Decoder a )
-getUrlAndDecoderFromRequest request =
-    case request of
-        GetJson url decoder ->
-            ( url, decoder )
-
-        PostJson url _ decoder ->
-            ( url, decoder )
-
-
-filterByGet : Endpoint -> Bool
-filterByGet endpoint =
-    case endpoint of
-        Get _ ->
-            True
-
-        Post _ ->
-            False
-
-
-filterByPost : Endpoint -> Bool
-filterByPost endpoint =
-    case endpoint of
-        Get _ ->
-            False
-
-        Post _ ->
-            True
-
-
-filterEndpointsByUrl : String -> Endpoint -> Bool
-filterEndpointsByUrl urlToMatch endpoint =
-    let
-        url =
-            case endpoint of
-                Get endpoint ->
-                    endpoint.url
-
-                Post endpoint ->
-                    endpoint.url
-    in
-        url == urlToMatch
 
 
 getResponseFromEndpointUrlAndDecoder : Maybe Endpoint -> String -> Decode.Decoder a -> Result Http.Error a
@@ -342,7 +331,7 @@ decodeEndpointResult : Decode.Decoder a -> Endpoint -> Result Http.Error a
 decodeEndpointResult resultDecoder endpoint =
     let
         endpointData =
-            unwrapEndpoint endpoint
+            getEndpointData endpoint
 
         decodeResult =
             Decode.decodeString resultDecoder endpointData.response
