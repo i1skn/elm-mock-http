@@ -1,5 +1,5 @@
 {
-    "version": "1.0.1",
+    "version": "2.0.0",
     "summary": "A client-side server to simulate server-side communications",
     "repository": "https://github.com/ryanolsonx/elm-mock-http.git",
     "license": "BSD3",

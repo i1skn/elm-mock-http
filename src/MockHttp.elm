@@ -3,6 +3,7 @@ module MockHttp
         ( Request
         , Config
         , Endpoint(..)
+        , EndpointData
         , config
         , get
         , getString
@@ -17,7 +18,7 @@ A client-side server to simulate server-side communications that are made
 through `elm-lang/Http`.
 
 # Configure Endpoints
-@docs Config, Endpoint, config
+@docs Config, Endpoint, EndpointData, config
 
 # Send Requests
 @docs Request, send, getResult
@@ -77,6 +78,8 @@ type Endpoint
     | Post EndpointData
 
 
+{-| Represents the details of an endpoint
+-}
 type alias EndpointData =
     { url : String
     , response : String
