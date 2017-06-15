@@ -2,7 +2,7 @@
     "version": "1.0.0",
     "summary": "Tests for elm-mock-http",
     "repository": "https://github.com/ryanolsonx/elm-mock-http.git",
-    "license": "BSD-3-Clause",
+    "license": "GPL-3.0",
     "source-directories": [
         ".",
         "../src"

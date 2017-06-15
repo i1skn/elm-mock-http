@@ -154,4 +154,9 @@ the Elm Slack.
 
 ## License
 
-See LICENSE.
+Copyright (c) 2017 Ryan Olson
+
+GNU GENERAL PUBLIC LICENSE
+    Version 3, 29 June 2007
+
+See LICENSE for more information.
