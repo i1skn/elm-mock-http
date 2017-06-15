@@ -151,3 +151,7 @@ and pull requests are welcome and encouraged! I really want to make this a usefu
 tool during development that will make our lives easier. If you'd like to help or
 have any ideas, get in touch with me at @ryanolsonx on Twitter or @ryanolsonx on
 the Elm Slack.
+
+## License
+
+See LICENSE.
