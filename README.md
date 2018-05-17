@@ -111,11 +111,12 @@ config =
                 , "Harry Potter"
                 ]
               """
+            , responseTime = 1000
             }
         ]
 ```
 
-This example will make it so that when you run the following code you'll get those two books as a response.
+This example will make it so that when you run the following code you'll get those two books as a response in 1 second.
 
 ```elm
 import Http
